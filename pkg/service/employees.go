@@ -22,3 +22,7 @@ func (s *EmployeesService) Create(input entities.EmployeeInputAndResponse) (int,
 func (s *EmployeesService) GetAll(companyId *int, departmentName *string, offset, limit int) ([]entities.EmployeeInputAndResponse, error) {
 	return s.employeesRepo.GetAll(companyId, departmentName, offset, limit)
 }
+
+func (s *EmployeesService) UpdateById(id int, input entities.UpdateEmployeeInput) error {
+	return s.employeesRepo.UpdateById(id, input)
+}

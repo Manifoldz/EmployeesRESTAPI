@@ -18,3 +18,13 @@ type EmployeeInputAndResponse struct {
 	Passport   Passport   `json:"passport" binding:"required"`
 	Department Department `json:"department" binding:"required"`
 }
+
+type UpdateEmployeeInput struct {
+	Id         *int                   `json:"id"`
+	Name       *string                `json:"name"`
+	Surname    *string                `json:"surname"`
+	Phone      *string                `json:"phone"`
+	CompanyId  *int                   `json:"company_id"`
+	Passport   *PassportUpdateInput   `json:"passport"`
+	Department *DepartmentUpdateInput `json:"department"`
+}

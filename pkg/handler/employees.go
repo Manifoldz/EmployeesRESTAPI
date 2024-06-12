@@ -66,8 +66,25 @@ func (h *Handler) getAllEmployees(c *gin.Context) {
 	c.JSON(http.StatusOK, employees)
 }
 
-func (h *Handler) getEmployeeById(c *gin.Context) {}
+func (h *Handler) updateEmployeeById(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id parameter")
+		return
+	}
 
-func (h *Handler) updateEmployeeById(c *gin.Context) {}
+	var input entities.UpdateEmployeeInput
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := h.services.Employees.UpdateById(id, input); err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, statusResponse{"success"})
+}
 
 func (h *Handler) deleteEmployeeById(c *gin.Context) {}

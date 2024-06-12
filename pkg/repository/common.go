@@ -27,3 +27,18 @@ func CheckIfExists(tx *sql.Tx, table string, queryArgs map[string]interface{}) (
 	}
 	return true, id, nil // Запись найдена
 }
+
+func CreateCompany(tx *sql.Tx, id int) error {
+	checkArgsCompany := map[string]interface{}{"id": id}
+	is_exist, _, err := CheckIfExists(tx, companiesTable, checkArgsCompany)
+	if err != nil {
+		return err
+	}
+	if !is_exist {
+		createCompanyQuery := fmt.Sprintf("INSERT INTO %s (id) VALUES ($1)", companiesTable)
+		if _, err = tx.Exec(createCompanyQuery, id); err != nil {
+			return err
+		}
+	}
+	return nil
+}

@@ -35,24 +35,15 @@ func (r *EmployeesPostgres) Create(input entities.EmployeeInputAndResponse) (int
 	}
 
 	// добавим компанию, если она не существует
-	checkArgsCompany := map[string]interface{}{"id": input.CompanyId}
-	is_exist, _, err := CheckIfExists(tx, companiesTable, checkArgsCompany)
-	if err != nil {
+	if err := CreateCompany(tx, input.CompanyId); err != nil {
 		tx.Rollback()
 		return 0, err
-	}
-	if !is_exist {
-		createCompanyQuery := fmt.Sprintf("INSERT INTO %s (id) VALUES ($1)", companiesTable)
-		if _, err = tx.Exec(createCompanyQuery, input.CompanyId); err != nil {
-			tx.Rollback()
-			return 0, err
-		}
 	}
 
 	// добавим департамент, если он не существует
 	var departmentId int
 	checkArgsDepartment := map[string]interface{}{"company_id": input.CompanyId, "name": input.Department.Name}
-	is_exist, departmentId, err = CheckIfExists(tx, departmentsTable, checkArgsDepartment)
+	is_exist, departmentId, err := CheckIfExists(tx, departmentsTable, checkArgsDepartment)
 	if err != nil {
 		tx.Rollback()
 		return 0, err
@@ -163,4 +154,61 @@ func (r *EmployeesPostgres) GetAll(companyId *int, departmentName *string, offse
 	}
 
 	return employees, nil
+}
+
+func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInput) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+
+	if input.Id != nil {
+		setValues = append(setValues, fmt.Sprintf("id=$%d", argId))
+		args = append(args, *input.Id)
+		argId++
+	}
+
+	if input.Name != nil {
+		setValues = append(setValues, fmt.Sprintf("name=$%d", argId))
+		args = append(args, *input.Name)
+		argId++
+	}
+
+	if input.Surname != nil {
+		setValues = append(setValues, fmt.Sprintf("surname=$%d", argId))
+		args = append(args, *input.Surname)
+		argId++
+	}
+
+	if input.Phone != nil {
+		setValues = append(setValues, fmt.Sprintf("phone=$%d", argId))
+		args = append(args, *input.Phone)
+		argId++
+	}
+
+	if input.CompanyId != nil {
+		// добавим компанию, если она не существует
+		if err := CreateCompany(tx, *input.CompanyId); err != nil {
+			tx.Rollback()
+			return err
+		}
+		setValues = append(setValues, fmt.Sprintf("company_id=$%d", argId))
+		args = append(args, *input.CompanyId)
+		argId++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf("UPDATE %s t1 SET %s WHERE t1.id  = $%d;", employeesTable, setQuery, argId)
+	args = append(args, id)
+	if _, err := tx.Exec(query, args...); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
