@@ -9,8 +9,7 @@ type Employees interface {
 	Create(input entities.EmployeeInputAndResponse) (int, error)
 	GetAll(companyId *int, departmentName *string, offset, limit int) ([]entities.EmployeeInputAndResponse, error)
 	UpdateById(id int, input entities.UpdateEmployeeInput) error
-	// DeleteById(id int) error
-	// UpdateById(id int, input entities.UpdateListInput) error
+	DeleteById(id int) error
 }
 
 type Repository struct {

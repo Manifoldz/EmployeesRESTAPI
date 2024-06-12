@@ -202,3 +202,10 @@ func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInpu
 
 	return tx.Commit()
 }
+
+func (r *EmployeesPostgres) DeleteById(id int) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1;", employeesTable)
+	_, err := r.db.Exec(query, id)
+
+	return err
+}

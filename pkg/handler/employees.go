@@ -87,4 +87,17 @@ func (h *Handler) updateEmployeeById(c *gin.Context) {
 	c.JSON(http.StatusOK, statusResponse{"success"})
 }
 
-func (h *Handler) deleteEmployeeById(c *gin.Context) {}
+func (h *Handler) deleteEmployeeById(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid item id parameter")
+		return
+	}
+	err = h.services.Employees.DeleteById(id)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, statusResponse{"success"})
+}

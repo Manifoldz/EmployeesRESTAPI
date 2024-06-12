@@ -26,3 +26,7 @@ func (s *EmployeesService) GetAll(companyId *int, departmentName *string, offset
 func (s *EmployeesService) UpdateById(id int, input entities.UpdateEmployeeInput) error {
 	return s.employeesRepo.UpdateById(id, input)
 }
+
+func (s *EmployeesService) DeleteById(id int) error {
+	return s.employeesRepo.DeleteById(id)
+}
