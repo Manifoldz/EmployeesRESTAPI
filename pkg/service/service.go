@@ -7,7 +7,7 @@ import (
 
 type Employees interface {
 	Create(input entities.EmployeeInputAndResponse) (int, error)
-	GetAll(companyId, departmentId *int, offset, limit int) ([]entities.EmployeeInputAndResponse, error)
+	GetAll(companyId *int, departmentName *string, offset, limit int) ([]entities.EmployeeInputAndResponse, error)
 }
 
 type Service struct {

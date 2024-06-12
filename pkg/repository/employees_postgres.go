@@ -13,6 +13,7 @@ type EmployeesPostgres struct {
 }
 
 type EmployeeQueryResult struct {
+	Id              int    `db:"id"`
 	Name            string `db:"name"`
 	Surname         string `db:"surname"`
 	Phone           string `db:"phone"`
@@ -84,7 +85,7 @@ func (r *EmployeesPostgres) Create(input entities.EmployeeInputAndResponse) (int
 	return employeeId, tx.Commit()
 }
 
-func (r *EmployeesPostgres) GetAll(companyId, departmentId *int, offset, limit int) ([]entities.EmployeeInputAndResponse, error) {
+func (r *EmployeesPostgres) GetAll(companyId *int, departmentName *string, offset, limit int) ([]entities.EmployeeInputAndResponse, error) {
 	var queryBuilder strings.Builder
 	var args []interface{}
 	var argCounter int = 1
@@ -92,6 +93,7 @@ func (r *EmployeesPostgres) GetAll(companyId, departmentId *int, offset, limit i
 	// добавление выбора
 	queryBuilder.WriteString(`
 	SELECT
+		e.id,
 		e.name,
 		e.surname,
 		e.phone,
@@ -112,15 +114,15 @@ func (r *EmployeesPostgres) GetAll(companyId, departmentId *int, offset, limit i
 		argCounter++
 	}
 
-	// добавление фильтрации по departmentId, если он передан и уже есть условие WHERE
-	if departmentId != nil {
+	// добавление фильтрации по departmentName, если он передан и уже есть условие WHERE
+	if departmentName != nil {
 		if companyId != nil {
 			queryBuilder.WriteString(" AND")
 		} else {
 			queryBuilder.WriteString(" WHERE")
 		}
-		queryBuilder.WriteString(fmt.Sprintf(" e.department_id = $%d", argCounter))
-		args = append(args, *departmentId)
+		queryBuilder.WriteString(fmt.Sprintf(" d.name = $%d", argCounter))
+		args = append(args, *departmentName)
 		argCounter++
 	}
 
@@ -133,10 +135,31 @@ func (r *EmployeesPostgres) GetAll(companyId, departmentId *int, offset, limit i
 
 	// выполнение запроса
 	finalQuery := queryBuilder.String()
-	var employees []entities.EmployeeInputAndResponse
-	err := r.db.Select(&employees, finalQuery, args...)
+	var queryResults []EmployeeQueryResult
+	err := r.db.Select(&queryResults, finalQuery, args...)
 	if err != nil {
 		return nil, err
+	}
+
+	// сборка ответа
+	var employees []entities.EmployeeInputAndResponse
+	for _, qr := range queryResults {
+		employee := entities.EmployeeInputAndResponse{
+			Id:        qr.Id,
+			Name:      qr.Name,
+			Surname:   qr.Surname,
+			Phone:     qr.Phone,
+			CompanyId: qr.CompanyId,
+			Passport: entities.Passport{
+				Type:   qr.PassportType,
+				Number: qr.PassportNumber,
+			},
+			Department: entities.Department{
+				Name:  qr.DepartmentName,
+				Phone: qr.DepartmentPhone,
+			},
+		}
+		employees = append(employees, employee)
 	}
 
 	return employees, nil

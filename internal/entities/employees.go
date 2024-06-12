@@ -10,6 +10,7 @@ type Employee struct {
 }
 
 type EmployeeInputAndResponse struct {
+	Id         int        `json:"id"`
 	Name       string     `json:"name" binding:"required"`
 	Surname    string     `json:"surname" binding:"required"`
 	Phone      string     `json:"phone"`

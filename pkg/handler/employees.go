@@ -40,16 +40,11 @@ func (h *Handler) getAllEmployees(c *gin.Context) {
 		companyId = &id
 	}
 
-	// извлечение department_id из запроса
-	departmentQuery := c.Query("department_id")
-	var departmentId *int
+	// извлечение department_name из запроса
+	departmentQuery := c.Query("department_name")
+	var departmentName *string
 	if departmentQuery != "" {
-		id, err := strconv.Atoi(departmentQuery)
-		if err != nil {
-			newErrorResponse(c, http.StatusBadRequest, "invalid department_id parameter")
-			return
-		}
-		departmentId = &id
+		departmentName = &departmentQuery
 	}
 
 	// извлечение параметров пагинации из запроса
@@ -62,7 +57,7 @@ func (h *Handler) getAllEmployees(c *gin.Context) {
 		limit = 10
 	}
 
-	employees, err := h.services.Employees.GetAll(companyId, departmentId, offset, limit)
+	employees, err := h.services.Employees.GetAll(companyId, departmentName, offset, limit)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

@@ -19,6 +19,6 @@ func (s *EmployeesService) Create(input entities.EmployeeInputAndResponse) (int,
 	return s.employeesRepo.Create(input)
 }
 
-func (s *EmployeesService) GetAll(companyId, departmentId *int, offset, limit int) ([]entities.EmployeeInputAndResponse, error) {
-	return s.employeesRepo.GetAll(companyId, departmentId, offset, limit)
+func (s *EmployeesService) GetAll(companyId *int, departmentName *string, offset, limit int) ([]entities.EmployeeInputAndResponse, error) {
+	return s.employeesRepo.GetAll(companyId, departmentName, offset, limit)
 }
