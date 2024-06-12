@@ -1,18 +1,27 @@
-CREATE TABLE IF NOT EXISTS todo_lists (
-    id serial PRIMARY KEY,
-    title varchar(255) NOT NULL,
-    description varchar(255)
+CREATE TABLE IF NOT EXISTS companies (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS todo_items (
-    id serial PRIMARY KEY,
-    title varchar(255) NOT NULL,
-    description varchar(255),
-    done boolean NOT NULL DEFAULT false
+CREATE TABLE IF NOT EXISTS departments (
+    id SERIAL PRIMARY KEY,
+    company_id INT REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50)
 );
 
-CREATE TABLE IF NOT EXISTS lists_items (
-    id serial PRIMARY KEY,
-    item_id integer REFERENCES todo_items(id) ON DELETE CASCADE NOT NULL,
-    list_id integer REFERENCES todo_lists(id) ON DELETE CASCADE NOT NULL
+CREATE TABLE IF NOT EXISTS employees (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    surname VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    company_id INT REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
+    department_id INT REFERENCES departments(id) ON DELETE CASCADE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS passports (
+    id SERIAL PRIMARY KEY,
+    employee_id INT REFERENCES employees(id) ON DELETE CASCADE NOT NULL,
+    type VARCHAR(50),
+    number VARCHAR(50)
 );
