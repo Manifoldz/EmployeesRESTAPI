@@ -205,13 +205,59 @@ func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInpu
 		argId++
 	}
 
-	setQuery := strings.Join(setValues, ", ")
+	if input.Department.Name != nil {
+		if input.CompanyId == nil {
+			var companyId int
+			getCompanyIdQuery := fmt.Sprintf("SELECT company_id  FROM  %s WHERE id  =  $1;", employeesTable)
+			row := tx.QueryRow(getCompanyIdQuery, id)
+			err = row.Scan(&companyId)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+			input.CompanyId = &companyId
+		}
+		// добавим департамент, если он не существует, а если существует получим id департамента
+		var departmentId int
+		var department_phone string
+		if input.Department.Phone != nil {
+			department_phone = *input.Department.Phone
+		}
 
-	query := fmt.Sprintf("UPDATE %s t1 SET %s WHERE t1.id  = $%d;", employeesTable, setQuery, argId)
-	args = append(args, id)
-	if _, err := tx.Exec(query, args...); err != nil {
-		tx.Rollback()
-		return err
+		if err := CreateDepartment(tx, *input.CompanyId, *input.Department.Name, department_phone, &departmentId); err != nil {
+			tx.Rollback()
+			return err
+		}
+		setValues = append(setValues, fmt.Sprintf("department_id=$%d", argId))
+		args = append(args, departmentId)
+		argId++
+	}
+
+	if input.Department.Phone != nil && input.Department.Name == nil {
+		var departmentId int
+		getDepartmentIdQuery := fmt.Sprintf("SELECT department_id  FROM  %s WHERE id  =  $1;", employeesTable)
+		row := tx.QueryRow(getDepartmentIdQuery, id)
+		err = row.Scan(&departmentId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+		queryUpdateDepartPhone := fmt.Sprintf("UPDATE %s SET phone = $1 WHERE id = $2;", departmentsTable)
+		if _, err := tx.Exec(queryUpdateDepartPhone, *input.Department.Phone, departmentId); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	if argId != 1 {
+		setQuery := strings.Join(setValues, ", ")
+
+		query := fmt.Sprintf("UPDATE %s t1 SET %s WHERE t1.id  = $%d;", employeesTable, setQuery, argId)
+		args = append(args, id)
+		if _, err := tx.Exec(query, args...); err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 
 	return tx.Commit()
