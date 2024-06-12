@@ -1,10 +1,12 @@
 package service
 
 import (
+	"github.com/Manifoldz/EmployeesRESTAPI/internal/entities"
 	"github.com/Manifoldz/EmployeesRESTAPI/pkg/repository"
 )
 
 type Employees interface {
+	Create(input entities.CreateEmployeeInput) (int, error)
 }
 
 type Service struct {

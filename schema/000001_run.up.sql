@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS companies (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    name VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS departments (
@@ -23,5 +23,6 @@ CREATE TABLE IF NOT EXISTS passports (
     id SERIAL PRIMARY KEY,
     employee_id INT REFERENCES employees(id) ON DELETE CASCADE NOT NULL,
     type VARCHAR(50),
-    number VARCHAR(50)
+    number VARCHAR(50),
+    UNIQUE(type, number) 
 );

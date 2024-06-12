@@ -7,10 +7,10 @@ import (
 )
 
 const (
-// employeesTable   = "employees"
-// departmentsTable = "departments"
-// companiesTable   = "companies"
-// passportsTable   = "passports"
+	employeesTable   = "employees"
+	departmentsTable = "departments"
+	companiesTable   = "companies"
+	passportsTable   = "passports"
 )
 
 type Config struct {

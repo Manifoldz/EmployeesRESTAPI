@@ -1,11 +1,12 @@
 package repository
 
 import (
+	"github.com/Manifoldz/EmployeesRESTAPI/internal/entities"
 	"github.com/jmoiron/sqlx"
 )
 
 type Employees interface {
-	// Create(list entities.ToDoList) (int, error)
+	Create(input entities.CreateEmployeeInput) (int, error)
 	// GetAll() ([]entities.ToDoList, error)
 	// GetById(id int) (entities.ToDoList, error)
 	// DeleteById(id int) error
