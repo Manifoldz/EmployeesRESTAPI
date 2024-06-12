@@ -42,3 +42,23 @@ func CreateCompany(tx *sql.Tx, id int) error {
 	}
 	return nil
 }
+
+func CreateDepartment(tx *sql.Tx, companyId int, departmentName, departmentPhone string, departmentId *int) error {
+	checkArgsDepartment := map[string]interface{}{"company_id": companyId, "name": departmentName}
+	is_exist, id, err := CheckIfExists(tx, departmentsTable, checkArgsDepartment)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if !is_exist {
+		createDepartmentQuery := fmt.Sprintf("INSERT INTO %s (company_id, name, phone) VALUES ($1, $2, $3) RETURNING id", departmentsTable)
+		row1 := tx.QueryRow(createDepartmentQuery, companyId, departmentName, departmentPhone)
+		if err := row1.Scan(&id); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	*departmentId = id
+	return nil
+}

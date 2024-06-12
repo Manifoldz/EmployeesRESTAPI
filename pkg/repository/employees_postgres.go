@@ -42,19 +42,9 @@ func (r *EmployeesPostgres) Create(input entities.EmployeeInputAndResponse) (int
 
 	// добавим департамент, если он не существует
 	var departmentId int
-	checkArgsDepartment := map[string]interface{}{"company_id": input.CompanyId, "name": input.Department.Name}
-	is_exist, departmentId, err := CheckIfExists(tx, departmentsTable, checkArgsDepartment)
-	if err != nil {
+	if err := CreateDepartment(tx, input.CompanyId, input.Department.Name, input.Department.Phone, &departmentId); err != nil {
 		tx.Rollback()
 		return 0, err
-	}
-	if !is_exist {
-		createDepartmentQuery := fmt.Sprintf("INSERT INTO %s (company_id, name, phone) VALUES ($1, $2, $3) RETURNING id", departmentsTable)
-		row1 := tx.QueryRow(createDepartmentQuery, input.CompanyId, input.Department.Name, input.Department.Phone)
-		if err := row1.Scan(&departmentId); err != nil {
-			tx.Rollback()
-			return 0, err
-		}
 	}
 
 	// добавим сотрудника
