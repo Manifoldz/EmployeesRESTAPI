@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -147,9 +148,18 @@ func (r *EmployeesPostgres) GetAll(companyId *int, departmentName *string, offse
 }
 
 func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInput) error {
+
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
+	}
+
+	if is_exists, err := isResourceExists(tx, employeesTable, id); err != nil {
+		tx.Rollback()
+		return err
+	} else if !is_exists {
+		tx.Rollback()
+		return errors.New("employee not found")
 	}
 
 	setValues := make([]string, 0)
@@ -205,7 +215,7 @@ func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInpu
 		argId++
 	}
 
-	if input.Department.Name != nil {
+	if input.Department != nil && input.Department.Name != nil {
 		if input.CompanyId == nil {
 			var companyId int
 			getCompanyIdQuery := fmt.Sprintf("SELECT company_id  FROM  %s WHERE id  =  $1;", employeesTable)
@@ -220,7 +230,7 @@ func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInpu
 		// добавим департамент, если он не существует, а если существует получим id департамента
 		var departmentId int
 		var department_phone string
-		if input.Department.Phone != nil {
+		if input.Department != nil && input.Department.Phone != nil {
 			department_phone = *input.Department.Phone
 		}
 
@@ -233,7 +243,7 @@ func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInpu
 		argId++
 	}
 
-	if input.Department.Phone != nil && input.Department.Name == nil {
+	if input.Department != nil && input.Department.Phone != nil && input.Department.Name == nil {
 		var departmentId int
 		getDepartmentIdQuery := fmt.Sprintf("SELECT department_id  FROM  %s WHERE id  =  $1;", employeesTable)
 		row := tx.QueryRow(getDepartmentIdQuery, id)
@@ -244,6 +254,22 @@ func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInpu
 		}
 		queryUpdateDepartPhone := fmt.Sprintf("UPDATE %s SET phone = $1 WHERE id = $2;", departmentsTable)
 		if _, err := tx.Exec(queryUpdateDepartPhone, *input.Department.Phone, departmentId); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	if input.Passport != nil && input.Passport.Number != nil {
+		queryUpdatePassport := fmt.Sprintf("UPDATE %s SET number = $1 WHERE employee_id = $2;", passportsTable)
+		if _, err := tx.Exec(queryUpdatePassport, *input.Passport.Number, id); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	if input.Passport != nil && input.Passport.Type != nil {
+		queryUpdatePassport := fmt.Sprintf("UPDATE %s SET type = $1 WHERE employee_id = $2;", passportsTable)
+		if _, err := tx.Exec(queryUpdatePassport, *input.Passport.Type, id); err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -264,8 +290,23 @@ func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInpu
 }
 
 func (r *EmployeesPostgres) DeleteById(id int) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1;", employeesTable)
-	_, err := r.db.Exec(query, id)
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
 
+	if is_exists, err := isResourceExists(tx, employeesTable, id); err != nil {
+		tx.Rollback()
+		return err
+	} else if !is_exists {
+		tx.Rollback()
+		return errors.New("employee not found")
+	}
+
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1;", employeesTable)
+	_, err = tx.Exec(query, id)
+	if err != nil {
+		tx.Rollback()
+	}
 	return err
 }

@@ -79,6 +79,11 @@ func (h *Handler) updateEmployeeById(c *gin.Context) {
 		return
 	}
 
+	if err := input.Validate(); err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
 	if err := h.services.Employees.UpdateById(id, input); err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -95,7 +100,12 @@ func (h *Handler) deleteEmployeeById(c *gin.Context) {
 	}
 	err = h.services.Employees.DeleteById(id)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		errDescription := err.Error()
+		if err.Error() == "employee not found" {
+			newErrorResponse(c, http.StatusNotFound, errDescription)
+		} else {
+			newErrorResponse(c, http.StatusInternalServerError, errDescription)
+		}
 		return
 	}
 

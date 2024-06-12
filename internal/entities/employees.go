@@ -1,5 +1,10 @@
 package entities
 
+import (
+	"errors"
+	"reflect"
+)
+
 type Employee struct {
 	Id           int    `json:"id" db:"id"`
 	Name         string `json:"name" db:"name"`
@@ -27,4 +32,17 @@ type UpdateEmployeeInput struct {
 	CompanyId  *int                   `json:"company_id"`
 	Passport   *PassportUpdateInput   `json:"passport"`
 	Department *DepartmentUpdateInput `json:"department"`
+}
+
+func (i UpdateEmployeeInput) Validate() error {
+	v := reflect.ValueOf(i)
+	for j := 0; j < v.NumField(); j++ {
+		field := v.Field(j)
+		if field.Kind() == reflect.Ptr && !field.IsNil() {
+			// найдено ненулевое поле, значит не все поля nil
+			return nil
+		}
+	}
+	// если дошли до этого момента, значит все поля nil
+	return errors.New("all fields are nil, check correct fields name")
 }

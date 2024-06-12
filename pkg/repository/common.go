@@ -62,3 +62,12 @@ func CreateDepartment(tx *sql.Tx, companyId int, departmentName, departmentPhone
 	*departmentId = id
 	return nil
 }
+
+func isResourceExists(tx *sql.Tx, table string, id int) (bool, error) {
+	queryCheck := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE id = $1", table)
+	var count int
+	if err := tx.QueryRow(queryCheck, id).Scan(&count); err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
