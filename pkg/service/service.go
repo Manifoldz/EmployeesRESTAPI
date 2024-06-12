@@ -6,7 +6,8 @@ import (
 )
 
 type Employees interface {
-	Create(input entities.CreateEmployeeInput) (int, error)
+	Create(input entities.EmployeeInputAndResponse) (int, error)
+	GetAll(companyId, departmentId *int, offset, limit int) ([]entities.EmployeeInputAndResponse, error)
 }
 
 type Service struct {

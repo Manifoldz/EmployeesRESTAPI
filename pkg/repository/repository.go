@@ -6,8 +6,8 @@ import (
 )
 
 type Employees interface {
-	Create(input entities.CreateEmployeeInput) (int, error)
-	// GetAll() ([]entities.ToDoList, error)
+	Create(input entities.EmployeeInputAndResponse) (int, error)
+	GetAll(companyId, departmentId *int, offset, limit int) ([]entities.EmployeeInputAndResponse, error)
 	// GetById(id int) (entities.ToDoList, error)
 	// DeleteById(id int) error
 	// UpdateById(id int, input entities.UpdateListInput) error

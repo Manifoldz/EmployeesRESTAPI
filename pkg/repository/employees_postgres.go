@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Manifoldz/EmployeesRESTAPI/internal/entities"
 	"github.com/jmoiron/sqlx"
@@ -11,11 +12,22 @@ type EmployeesPostgres struct {
 	db *sqlx.DB
 }
 
+type EmployeeQueryResult struct {
+	Name            string `db:"name"`
+	Surname         string `db:"surname"`
+	Phone           string `db:"phone"`
+	CompanyId       int    `db:"company_id"`
+	PassportType    string `db:"passport_type"`
+	PassportNumber  string `db:"passport_number"`
+	DepartmentName  string `db:"department_name"`
+	DepartmentPhone string `db:"department_phone"`
+}
+
 func NewEmployeesPostgres(db *sqlx.DB) *EmployeesPostgres {
 	return &EmployeesPostgres{db: db}
 }
 
-func (r *EmployeesPostgres) Create(input entities.CreateEmployeeInput) (int, error) {
+func (r *EmployeesPostgres) Create(input entities.EmployeeInputAndResponse) (int, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return 0, err
@@ -70,4 +82,62 @@ func (r *EmployeesPostgres) Create(input entities.CreateEmployeeInput) (int, err
 	}
 
 	return employeeId, tx.Commit()
+}
+
+func (r *EmployeesPostgres) GetAll(companyId, departmentId *int, offset, limit int) ([]entities.EmployeeInputAndResponse, error) {
+	var queryBuilder strings.Builder
+	var args []interface{}
+	var argCounter int = 1
+
+	// добавление выбора
+	queryBuilder.WriteString(`
+	SELECT
+		e.name,
+		e.surname,
+		e.phone,
+		e.company_id,
+		p.type AS passport_type,
+		p.number AS passport_number,
+		d.name AS department_name,
+		d.phone AS department_phone`)
+
+	// добавление объединения
+	queryBuilder.WriteString(fmt.Sprintf(" FROM %s e JOIN %s d ON e.department_id = d.id", employeesTable, departmentsTable))
+	queryBuilder.WriteString(fmt.Sprintf(" JOIN %s p ON e.id = p.employee_id", passportsTable))
+
+	// добавление фильтрации по companyId, если он передан
+	if companyId != nil {
+		queryBuilder.WriteString(fmt.Sprintf(" WHERE e.company_id  = $%d", argCounter))
+		args = append(args, *companyId)
+		argCounter++
+	}
+
+	// добавление фильтрации по departmentId, если он передан и уже есть условие WHERE
+	if departmentId != nil {
+		if companyId != nil {
+			queryBuilder.WriteString(" AND")
+		} else {
+			queryBuilder.WriteString(" WHERE")
+		}
+		queryBuilder.WriteString(fmt.Sprintf(" e.department_id = $%d", argCounter))
+		args = append(args, *departmentId)
+		argCounter++
+	}
+
+	// добавление группировки
+	queryBuilder.WriteString(` ORDER BY e.id`)
+
+	// добавление пагинации
+	queryBuilder.WriteString(fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCounter, argCounter+1))
+	args = append(args, limit, offset)
+
+	// выполнение запроса
+	finalQuery := queryBuilder.String()
+	var employees []entities.EmployeeInputAndResponse
+	err := r.db.Select(&employees, finalQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return employees, nil
 }

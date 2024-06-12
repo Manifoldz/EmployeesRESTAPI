@@ -9,7 +9,7 @@ type Employee struct {
 	DepartmentId int    `json:"department_id" db:"department_id"`
 }
 
-type CreateEmployeeInput struct {
+type EmployeeInputAndResponse struct {
 	Name       string     `json:"name" binding:"required"`
 	Surname    string     `json:"surname" binding:"required"`
 	Phone      string     `json:"phone"`
