@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	toDoListsTable  = "todo_lists"
-	toDoItemsTable  = "todo_items"
-	listsItemsTable = "lists_items"
+// employeesTable   = "employees"
+// departmentsTable = "departments"
+// companiesTable   = "companies"
+// passportsTable   = "passports"
 )
 
 type Config struct {
