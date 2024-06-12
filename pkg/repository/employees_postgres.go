@@ -21,20 +21,36 @@ func (r *EmployeesPostgres) Create(input entities.CreateEmployeeInput) (int, err
 		return 0, err
 	}
 
-	// добавим компанию
-	createCompanyQuery := fmt.Sprintf("INSERT INTO %s (id) VALUES ($1)", companiesTable)
-	if _, err = tx.Exec(createCompanyQuery, input.CompanyId); err != nil {
+	// добавим компанию, если она не существует
+	checkArgsCompany := map[string]interface{}{"id": input.CompanyId}
+	is_exist, _, err := CheckIfExists(tx, companiesTable, checkArgsCompany)
+	if err != nil {
 		tx.Rollback()
 		return 0, err
 	}
+	if !is_exist {
+		createCompanyQuery := fmt.Sprintf("INSERT INTO %s (id) VALUES ($1)", companiesTable)
+		if _, err = tx.Exec(createCompanyQuery, input.CompanyId); err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
 
-	// добавим департмент
+	// добавим департамент, если он не существует
 	var departmentId int
-	createDepartmentQuery := fmt.Sprintf("INSERT INTO %s (company_id, name, phone) VALUES ($1, $2, $3) RETURNING id", departmentsTable)
-	row1 := tx.QueryRow(createDepartmentQuery, input.CompanyId, input.Department.Name, input.Department.Phone)
-	if err := row1.Scan(&departmentId); err != nil {
+	checkArgsDepartment := map[string]interface{}{"company_id": input.CompanyId, "name": input.Department.Name}
+	is_exist, departmentId, err = CheckIfExists(tx, departmentsTable, checkArgsDepartment)
+	if err != nil {
 		tx.Rollback()
 		return 0, err
+	}
+	if !is_exist {
+		createDepartmentQuery := fmt.Sprintf("INSERT INTO %s (company_id, name, phone) VALUES ($1, $2, $3) RETURNING id", departmentsTable)
+		row1 := tx.QueryRow(createDepartmentQuery, input.CompanyId, input.Department.Name, input.Department.Phone)
+		if err := row1.Scan(&departmentId); err != nil {
+			tx.Rollback()
+			return 0, err
+		}
 	}
 
 	// добавим сотрудника
