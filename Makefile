@@ -82,9 +82,9 @@ delete-someEmployees:
 	curl -i -X DELETE localhost:8000/api/employees/1 \
 	-H "Content-Type: application/json";
 
-# Поменять у 3 сотрудника телефон у 4 департамент
+# Поменять у 5 сотрудника телефон у 4 департамент
 put-updateEmployee:
-	curl -i -X PUT localhost:8000/api/employees/3 \
+	curl -i -X PUT localhost:8000/api/employees/5 \
 	-H "Content-Type: application/json" \
 	-d '{"phone": "88005553535"}';
 	curl -i -X PUT localhost:8000/api/employees/4 \
