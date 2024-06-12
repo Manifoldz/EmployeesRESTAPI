@@ -11,6 +11,6 @@ RUN apt-get -y install postgresql-client
 RUN chmod +x wait_postgres.sh
 
 RUN go mod download
-RUN go build -o todosrv ./cmd/main.go
+RUN go build -o ./employeessrv ./cmd/main.go
 
-CMD ["./employees-srv"]
+CMD ["./employeessrv"]

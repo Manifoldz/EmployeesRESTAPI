@@ -307,6 +307,8 @@ func (r *EmployeesPostgres) DeleteById(id int) error {
 	_, err = tx.Exec(query, id)
 	if err != nil {
 		tx.Rollback()
+		return err
 	}
-	return err
+
+	return tx.Commit()
 }

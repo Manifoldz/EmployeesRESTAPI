@@ -3,15 +3,15 @@ PASSWORD=qwerty
 HOST_PORT=5432
 
 CONTAINER_DB_NAME=employeesrestapi-db-1
-CONTAINER_APP_NAME=employeesrestapi-employees-srv-1
+CONTAINER_APP_NAME=employeesrestapi-employeessrv-1
 
 all:
 
 build: 
-	docker-compose build employees-srv
+	docker-compose build employeessrv
 
 run:
-	docker-compose up employees-srv
+	docker-compose up employeessrv
 
 migrate:
 	migrate -path ./schema -database 'postgres://postgres:qwerty@0.0.0.0:5432/postgres?sslmode=disable' up
@@ -37,77 +37,56 @@ connect-db:
 connect-app:
 	docker exec -it $(CONTAINER_DB_NAME) /bin/bash
 
-test1: post-createLists post-createItems get-AllItems1
-test2: put-doneItems get-AllItems1 get-AllItems1Done get-AllItems1DonePag
+test1: post-createEmployees
+test2: get-AllEmployees get-AllEmployees1 get-AllEmployees1Develop1
+test3: delete-someEmployees get-AllEmployees
+test4: put-updateEmployee get-AllEmployees
 
-# Создать списки
-post-createLists:
-	curl -i -X POST localhost:8000/api/lists/ \
+# Создать сотрудников
+post-createEmployees:
+	curl -i -X POST localhost:8000/api/employees/ \
 	-H "Content-Type: application/json" \
-	-d '{"title": "Покупка продуктов", "description": "На праздник"}';
-	curl -i -X POST localhost:8000/api/lists/ \
+	-d '{"id":1,"name":"Aleks","surname":"First","phone":"11111111","company_id":1,"passport":{"type":"RF","number":"1111"},"department":{"name":"Develop1","phone":"1111"}}';
+	curl -i -X POST localhost:8000/api/employees/ \
 	-H "Content-Type: application/json" \
-	-d '{"title": "Список домашнего задания", "description": "По курсам"}';
-	curl -i -X POST localhost:8000/api/lists/ \
+	-d '{"id":2,"name":"Sergei","surname":"Second","phone":"22222222","company_id":1,"passport":{"type":"RF","number":"2222"},"department":{"name":"Develop1","phone":"1111"}}';
+	curl -i -X POST localhost:8000/api/employees/ \
 	-H "Content-Type: application/json" \
-	-d '{"title": "Встречи"}'
+	-d '{"id":3,"name":"Toya","surname":"Third","phone":"333333333","company_id":3,"passport":{"type":"driver","number":"33333"},"department":{"name":"Market","phone":"33333"}}';
+	curl -i -X POST localhost:8000/api/employees/ \
+	-H "Content-Type: application/json" \
+	-d '{"id":2,"name":"Yan","surname":"Fourth","phone":"44444444","company_id":1,"passport":{"type":"RF","number":"44444"},"department":{"name":"Develop2","phone":"22222"}}';
+		curl -i -X POST localhost:8000/api/employees/ \
+	-H "Content-Type: application/json" \
+	-d '{"id":2,"name":"Masha","surname":"Fifth","phone":"555555","company_id":3,"passport":{"type":"RF","number":"55555"},"department":{"name":"Market","phone":"33333"}}';
 
-
-# Создать задания
-post-createItems:
-	curl -i -X POST localhost:8000/api/lists/1/items/ \
-	-H "Content-Type: application/json" \
-	-d '{"title": "Хлеб", "description": "свежий"}';
-	curl -i -X POST localhost:8000/api/lists/1/items/ \
-	-H "Content-Type: application/json" \
-	-d '{"title": "Яблоки", "description": "2кг"}';
-	curl -i -X POST localhost:8000/api/lists/1/items/ \
-	-H "Content-Type: application/json" \
-	-d '{"title": "Молоко", "description": "3,2%"}';
-	curl -i -X POST localhost:8000/api/lists/2/items/ \
-	-H "Content-Type: application/json" \
-	-d '{"title": "Математика", "description": "2 задачи"}';
-	curl -i -X POST localhost:8000/api/lists/2/items/ \
-	-H "Content-Type: application/json" \
-	-d '{"title": "Информатика"}';
-	curl -i -X POST localhost:8000/api/lists/3/items/ \
-	-H "Content-Type: application/json" \
-	-d '{"title": "Обсудить задачи", "description": "C отделом планирования"}';
-	curl -i -X POST localhost:8000/api/lists/3/items/ \
-	-H "Content-Type: application/json" \
-	-d '{"title": "С другом"}'
-
-# Отметить выполнено
-put-doneItems:
-	curl -i -X PUT localhost:8000/api/items/1 \
-	-H "Content-Type: application/json" \
-	-d '{"done": true, "description": "вчерашний"}';
-	curl -i -X PUT localhost:8000/api/items/4 \
-	-H "Content-Type: application/json" \
-	-d '{"done": true}';
-	curl -i -X PUT localhost:8000/api/items/7 \
-	-H "Content-Type: application/json" \
-	-d '{"done": true}';
-
-
-# Удалить несколько задач
-delete-Items:
-	curl -i -X DELETE localhost:8000/api/items/2 \
-	-H "Content-Type: application/json";
-	curl -i -X DELETE localhost:8000/api/items/4 \
+# Запрос всех cотрудников 
+get-AllEmployees:
+	curl -i -X GET localhost:8000/api/employees/ \
 	-H "Content-Type: application/json";
 
-# Запрос всех листа 1
-get-AllItems1:
-	curl -i -X GET localhost:8000/api/lists/1/items/ \
+# Запрос всех cотрудников компании 1
+get-AllEmployees1:
+	curl -i -X GET localhost:8000/api/employees/?company_id=1 \
 	-H "Content-Type: application/json";
 
-# Запрос всех листа 1 с фильтрацией выполнено
-get-AllItems1Done:
-	curl -i -X GET localhost:8000/api/lists/1/items/?done=true \
+# Запрос всех cотрудников компании 1 отдела Develop1
+get-AllEmployees1Develop1:
+	curl -i -X GET "localhost:8000/api/employees/?company_id=1&department_name=Develop1" \
 	-H "Content-Type: application/json";
 
-# Запрос всех листа 1 с фильтрацией не выполнено и пагинацией
-get-AllItems1DonePag:
-	curl -i -X GET "localhost:8000/api/lists/1/items/?done=false&limit=1&offset=0" \
+# Удалить сотрудников 1 и 2
+delete-someEmployees:
+	curl -i -X DELETE localhost:8000/api/employees/3 \
 	-H "Content-Type: application/json";
+	curl -i -X DELETE localhost:8000/api/employees/1 \
+	-H "Content-Type: application/json";
+
+# Поменять у 3 сотрудника телефон у 4 департамент
+put-updateEmployee:
+	curl -i -X PUT localhost:8000/api/employees/3 \
+	-H "Content-Type: application/json" \
+	-d '{"phone": "88005553535"}';
+	curl -i -X PUT localhost:8000/api/employees/4 \
+	-H "Content-Type: application/json" \
+	-d '{"department":{"name":"NewDepart","phone":"7777777"}}';

@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  todosrv:
+  employeessrv:
     build: ./
-    command: ./wait_postgres.sh db ./employees-srv
+    command: ./wait_postgres.sh db ./employeessrv
     ports:
       - 8000:8000
     depends_on:
