@@ -156,10 +156,24 @@ func (r *EmployeesPostgres) UpdateById(id int, input entities.UpdateEmployeeInpu
 	args := make([]interface{}, 0)
 	argId := 1
 
+	// если id передан, то обновляем его вместе с увязкой паспорта
 	if input.Id != nil {
-		setValues = append(setValues, fmt.Sprintf("id=$%d", argId))
-		args = append(args, *input.Id)
-		argId++
+		queryCopyOldEmployee := fmt.Sprintf("INSERT INTO %s (id, name, surname, phone, company_id, department_id) SELECT $1, name, surname, phone, company_id, department_id FROM %s WHERE id = $2;", employeesTable, employeesTable)
+		if _, err := tx.Exec(queryCopyOldEmployee, *input.Id, id); err != nil {
+			tx.Rollback()
+			return err
+		}
+		queryUpdatePassport := fmt.Sprintf("UPDATE %s SET employee_id = $1 WHERE employee_id = $2;", passportsTable)
+		if _, err := tx.Exec(queryUpdatePassport, *input.Id, id); err != nil {
+			tx.Rollback()
+			return err
+		}
+		queryDeleteOldEmployee := fmt.Sprintf("DELETE FROM %s WHERE id = $1;", employeesTable)
+		if _, err := tx.Exec(queryDeleteOldEmployee, id); err != nil {
+			tx.Rollback()
+			return err
+		}
+		id = *input.Id
 	}
 
 	if input.Name != nil {
