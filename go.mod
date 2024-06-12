@@ -1,4 +1,4 @@
-module github.com/Manifoldz/TodoListRESTAPI
+module github.com/Manifoldz/EmployeesRESTAPI
 
 go 1.22.0
 
